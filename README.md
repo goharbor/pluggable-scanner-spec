@@ -1,5 +1,7 @@
 # pluggable-scanner-spec
 
+<img src="http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.0.yaml">
+
 Open API spec definition for the scanners that can be plugged into Harbor to do artifact scanning.
 
 
