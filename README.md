@@ -33,7 +33,7 @@ For more details, you can refer to the original [design proposal](https://github
 Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner Adapter API as specified in
 [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.0.yaml).
 
-> Note: OpenAPI spec yaml file can be opened in the online [Swagger Editor][swagger-editor].
+> Note: OpenAPI spec yaml file can be opened in the online [Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.0.yaml).
 
 - The deployment method is up to the vendor as long as the mounted API endpoint URL is accessible to Harbor services.
 - For each ScanRequest a Scanner Adapter generates a unique identifier which is used to poll for the corresponding
