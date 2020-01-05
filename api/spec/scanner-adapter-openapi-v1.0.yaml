@@ -161,7 +161,7 @@ components:
         name:
           type: string
           description: The name of the scanner.
-          example: Microscanner
+          example: Trivy
         vendor:
           type: string
           description: The name of the scanner's provider.
@@ -169,7 +169,7 @@ components:
         version:
           type: string
           description: The version of the scanner.
-          example: 3.0.5
+          example: 0.4.0
       description: |
         Basic scanner properties such as name, vendor, and version.
     ScannerAdapterMetadata:
@@ -280,6 +280,10 @@ components:
           type: string
           description: The artifact's digest, consisting of an algorithm and hex portion.
           example: "sha256:6c3c624b58dbbcd3c0dd82b4c53f04194d1247c6eebdaab7c610cf7d66709b3b"
+        tag:
+          type: string
+          description: The artifact's tag
+          example: "3.14-xenial"
         mime_type:
           type: string
           description: The MIME type of the artifact.
@@ -362,7 +366,6 @@ components:
           remote root privilege escalations, or massive data loss.
       example: Low
       enum:
-        - None
         - Unknown
         - Negligible
         - Low
