@@ -22,7 +22,7 @@ info:
 
     ## Supported produced MIME types
 
-    - `application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.1`
+    - `application/vnd.security.vulnerability.report; version=1.1`
     - `application/vnd.scanner.adapter.vuln.report.raw`
   contact:
     email: cncf-harbor-maintainers@lists.cncf.io
@@ -348,22 +348,26 @@ components:
           example:
             - https://security-tracker.debian.org/tracker/CVE-2017-8283
         cve3_score:
-          type: string
+          type: number
+          format: float
           description: |
             The CVSS 3.0 score for the vulnerability.
           example: 3.2
         cve2_score:
-          type: string
+          type: number
+          format: float
           description: |
             The CVSS 2.0 score for the vulnerability.
         cvss3_vector:
           type: string
           description: |
-            The CVSS 3.0 vector for the vulnerability. The string is of the form CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N
+            The CVSS 3.0 vector for the vulnerability. 
+          example: CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N
         cvss2_vector:
           type: string
           description: |
             The CVSS 2.0 vector for the vulnerability. The string is of the form AV:L/AC:M/Au:N/C:P/I:N/A:N
+          example: AV:N/AC:L/Au:N/C:N/I:N/A:P
         vendor_attributes:
           $ref: "#/components/schemas/VendorAttributes"
     Severity:
