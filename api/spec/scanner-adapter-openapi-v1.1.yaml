@@ -368,6 +368,12 @@ components:
           description: |
             The CVSS 2.0 vector for the vulnerability. The string is of the form AV:L/AC:M/Au:N/C:P/I:N/A:N
           example: AV:N/AC:L/Au:N/C:N/I:N/A:P
+        cwe_ids:
+          type: array
+          items:
+            type: string
+          example: 
+            - CWE-476
         vendor_attributes:
           $ref: "#/components/schemas/VendorAttributes"
     Severity:
