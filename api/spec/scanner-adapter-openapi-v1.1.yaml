@@ -123,12 +123,12 @@ paths:
           in: header
           schema:
             type: string
-          example: "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.1"
+          example: "application/vnd.security.vulnerability.report; version=1.1"
       responses:
         200:
           description: Scan report
           content:
-            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.1":
+            "application/vnd.security.vulnerability.report; version=1.1":
               schema:
                 $ref: '#/components/schemas/HarborVulnerabilityReport'
             "application/vnd.scanner.adapter.vuln.report.raw":
@@ -347,33 +347,16 @@ components:
           format: uri
           example:
             - https://security-tracker.debian.org/tracker/CVE-2017-8283
-        cve3_score:
-          type: number
-          format: float
-          description: |
-            The CVSS 3.0 score for the vulnerability.
-          example: 3.2
-        cve2_score:
-          type: number
-          format: float
-          description: |
-            The CVSS 2.0 score for the vulnerability.
-        cvss3_vector:
-          type: string
-          description: |
-            The CVSS 3.0 vector for the vulnerability. 
-          example: CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N
-        cvss2_vector:
-          type: string
-          description: |
-            The CVSS 2.0 vector for the vulnerability. The string is of the form AV:L/AC:M/Au:N/C:P/I:N/A:N
-          example: AV:N/AC:L/Au:N/C:N/I:N/A:P
+        cvss:
+          $ref: "#/components/schemas/CVSSDetails"
         cwe_ids:
           type: array
           items:
             type: string
           example: 
             - CWE-476
+          description: |
+            The Common Weakness Enumeration Identifiers associated with this vulnerability.
         vendor_attributes:
           $ref: "#/components/schemas/VendorAttributes"
     Severity:
@@ -423,6 +406,30 @@ components:
           type: string
           description: The value corresponding to the arbitrary property exposed by the scanner
           example: "ScannerPropertyValueBar"
+    CVSSDetails:
+      type: object
+      properties:
+        score_v3:
+          type: number
+          format: float
+          description: |
+            The CVSS 3.0 score for the vulnerability.
+          example: 3.2
+        score_v2:
+          type: number
+          format: float
+          description: |
+            The CVSS 2.0 score for the vulnerability.
+        vector_v3:
+          type: string
+          description: |
+            The CVSS 3.0 vector for the vulnerability. 
+          example: CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N
+        vector_v2:
+          type: string
+          description: |
+            The CVSS 2.0 vector for the vulnerability. The string is of the form AV:L/AC:M/Au:N/C:P/I:N/A:N
+          example: AV:N/AC:L/Au:N/C:N/I:N/A:P
   securitySchemes:
     BasicAuth:
       type: http
