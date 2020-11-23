@@ -358,7 +358,9 @@ components:
           description: |
             The Common Weakness Enumeration Identifiers associated with this vulnerability.
         vendor_attributes:
-          $ref: "#/components/schemas/VendorAttributes"
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorAttribute"
     Severity:
       type: string
       description: |
@@ -395,7 +397,7 @@ components:
         message:
           type: string
           example: "Some unexpected error"
-    VendorAttributes:
+    VendorAttribute:
       type: object
       properties:
         key:
