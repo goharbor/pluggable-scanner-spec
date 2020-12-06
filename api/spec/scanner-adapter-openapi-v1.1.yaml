@@ -129,6 +129,9 @@ paths:
         200:
           description: Scan report
           content:
+            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0":
+              schema:
+                $ref: '#/components/schemas/HarborVulnerabilityReport'
             "application/vnd.security.vulnerability.report; version=1.1":
               schema:
                 $ref: '#/components/schemas/HarborVulnerabilityReport'
