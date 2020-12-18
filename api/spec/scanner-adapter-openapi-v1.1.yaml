@@ -351,7 +351,7 @@ components:
           format: uri
           example:
             - https://security-tracker.debian.org/tracker/CVE-2017-8283
-        cvss:
+        preferred_cvss:
           $ref: "#/components/schemas/CVSSDetails"
         cwe_ids:
           type: array
