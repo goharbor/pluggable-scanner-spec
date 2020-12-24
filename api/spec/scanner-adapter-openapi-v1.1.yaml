@@ -32,7 +32,7 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: "1.1"
 servers:
-  - url: /api/v1_1
+  - url: /api/v1
 security:
   - BasicAuth: []
   - BearerAuth: []
@@ -362,9 +362,8 @@ components:
           description: |
             The Common Weakness Enumeration Identifiers associated with this vulnerability.
         vendor_attributes:
-          type: array
-          items:
-            $ref: "#/components/schemas/VendorAttribute"
+          type: object
+          additionalProperties: true
     Severity:
       type: string
       description: |
@@ -401,17 +400,6 @@ components:
         message:
           type: string
           example: "Some unexpected error"
-    VendorAttribute:
-      type: object
-      properties:
-        key:
-          type: string
-          description: A arbitrary property value that is exposed by the scanner
-          example: "ScannerPropertyFoo"
-        value:
-          type: string
-          description: The value corresponding to the arbitrary property exposed by the scanner
-          example: "ScannerPropertyValueBar"
     CVSSDetails:
       type: object
       properties:
