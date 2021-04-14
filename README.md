@@ -174,7 +174,7 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
           "version": "v0.16.0"
         },
         "severity": "High",
-      "vulnerabilities": [
+        "vulnerabilities": [
           {
               "id": "CVE-2020-1967",
               "package": "libcrypto1.1",
@@ -185,18 +185,6 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
               "links": [
                 "https://avd.aquasec.com/nvd/cve-2020-1967"
               ],
-              "cvss": {
-                "nvd": {
-                  "v2_vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
-                  "v3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-                  "v2_score": 5,
-                  "v3_score": 7.5
-                },
-                "redhat": {
-                  "v3_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-                  "v3_score": 7.5
-                }
-              },
               "preferred_cvss": {
                 "score_v2": 5,
                 "score_v3": 7.5,
@@ -221,8 +209,8 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
                 }
               }
             }
-        ...
-      ]
+          ...
+        ]
     }
     ```
  
