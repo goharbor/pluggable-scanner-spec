@@ -7,8 +7,7 @@ Open API spec definition for the scanners that can be plugged into Harbor to do 
 
 ## Background
 
-Add support to Harbor for using other image scanners than just _Clair_ by replacing the current Clair-specific
-scanning job implementation with an adapter layer implemented as an HTTP API between Harbor and the scanners' native
+Add support to Harbor for using other image scanners than  _Trivy_ by providing an adapter layer implemented as an HTTP API between Harbor and the scanners' native
 interfaces. This will provide runtime configurable scanner invocation to provide vulnerability scanning initially with
 the option for other types of scanning in the future.
 
@@ -71,9 +70,9 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
 
    {
      "scanner": {
-       "name": "Microscanner",
+       "name": "Trivy",
        "vendor": "Aqua Security",
-       "version": "3.0.5",
+       "version": "0.18.0",
      },
      "capabilities": [
        {
@@ -83,7 +82,6 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
          ],
          "produces_mime_types": [
            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
-           "application/vnd.scanner.adapter.vuln.report.raw",
            "application/vnd.security.vulnerability.report; version=1.1"
          ]
        }
@@ -294,8 +292,8 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
 
 ## Scanner Adapter Implementations
 
-* [Clair](https://github.com/goharbor/harbor-scanner-clair)
 * [Aqua Trivy](https://github.com/aquasecurity/harbor-scanner-trivy)
+* [Clair](https://github.com/goharbor/harbor-scanner-clair)
 * [Anchore](https://github.com/anchore/harbor-scanner-adapter)
 * [Aqua CSP](https://github.com/aquasecurity/harbor-scanner-aqua)
 * [DoSec Scanner](https://github.com/dosec-cn/harbor-scanner/blob/master/README_en.md)
