@@ -1,14 +1,13 @@
 # pluggable-scanner-spec
 
-<img src="http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.0.yaml">
+<img src="http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.1.yaml">
 
 Open API spec definition for the scanners that can be plugged into Harbor to do artifact scanning.
 
 
 ## Background
 
-Add support to Harbor for using other image scanners than just _Clair_ by replacing the current Clair-specific
-scanning job implementation with an adapter layer implemented as an HTTP API between Harbor and the scanners' native
+Add support to Harbor for using other image scanners than  _Trivy_ by providing an adapter layer implemented as an HTTP API between Harbor and the scanners' native
 interfaces. This will provide runtime configurable scanner invocation to provide vulnerability scanning initially with
 the option for other types of scanning in the future.
 
@@ -32,10 +31,18 @@ For more details, you can refer to the original [design proposal](https://github
 
 ## Scanner Adapter API
 
-Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner Adapter API as specified in
-[Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.0.yaml).
+The [Scanner Adapter v1.1 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.1.yaml)  normalizes the vulnerability schema to a base common representation and allowing scanners to provide more elaborate and richer information about vulnerabilities:
+ * CVSS 3.0 scores and vectors 
+ * CVSS 2.0 scores and vectors
+ * CWE IDs for the vulnerability
+ * Ability to specify additional scanner specific details
 
-> Note: OpenAPI spec yaml file can be opened in the online [Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.0.yaml).
+It is mandated for the new scanner integrations to implement the current API specification.
+Existing scanner integrations should plan to migrate to the current version of the API.
+The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.0.yaml) is being maintained only for backward compatibility until existing scanner integrations move to the new API specification.
+ 
+
+> Note: OpenAPI spec yaml file can be opened in the online [Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.1.yaml).
 
 - The deployment method is up to the vendor as long as the mounted API endpoint URL is accessible to Harbor services.
 - For each ScanRequest a Scanner Adapter generates a unique identifier which is used to poll for the corresponding
@@ -63,9 +70,9 @@ Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner 
 
    {
      "scanner": {
-       "name": "Microscanner",
+       "name": "Trivy",
        "vendor": "Aqua Security",
-       "version": "3.0.5",
+       "version": "0.18.0",
      },
      "capabilities": [
        {
@@ -75,7 +82,7 @@ Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner 
          ],
          "produces_mime_types": [
            "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0",
-           "application/vnd.scanner.adapter.vuln.report.raw"
+           "application/vnd.security.vulnerability.report; version=1.1"
          ]
        }
      ],
@@ -136,9 +143,9 @@ Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner 
          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
        }
        ```
-3. Try getting scan report (in unified Harbor format understandable by Harbor Web console):
+3. Try getting scan report (in the new v1.1 format understandable by Harbor Web console):
    ```
-   curl -H 'Accept: application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0' \
+   curl -H 'Accept: application/vnd.security.vulnerability.report; version=1.1' \
      http://scanner-adapter:8080/api/v1/scan/3fa85f64-5717-4562-b3fc-2c963f66afa6/report
 
    Retry-After: 15
@@ -147,40 +154,64 @@ Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner 
 4. Wait 15 seconds or use your own retry interval ...
 5. ... and try getting scan report again:
    ```
-   curl -H 'Accept: application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0' \
+    curl -H 'application/vnd.security.vulnerability.report; version=1.1' \
      http://scanner-adapter:8080/api/v1/scan/3fa85f64-5717-4562-b3fc-2c963f66afa6/report
+    Content-Type: application/vnd.security.vulnerability.report; version=1.1;
+    Status: 200 OK
 
-   Content-Type: application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0
-   Status: 200 OK
-
-   {
-     "generated_at": "2019-08-07T12:17:21.854Z",
-     "artifact": {
-       "repository": "library/mongo",
-       "digest": "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e"
-     },
-     "scanner": {
-       "name": "Microscanner",
-       "vendor": "Aqua Security",
-       "version": "3.0.5",
-     },
-     "severity": "High",
-     "vulnerabilities": [
-       {
-         "id": "CVE-2017-8283",
-         "package": "dpkg",
-         "version": "1.17.27",
-         "fix_version": "1.18.0",
-         "severity": "High",
-         "description": "...",
-         "links": [
-           "https://security-tracker.debian.org/tracker/CVE-2017-8283"
-         ]
-       },
-       ...
-     ]
-   }
-   ```
+    {
+        "generated_at": "2021-03-09T11:40:28.154072066Z",
+        "artifact": {
+          "repository": "library/docker",
+          "digest": "sha256:7215e8e09ea282e517aa350fc5380c1773c117b1867316fb59076d901e252d15",
+          "mime_type": "application/vnd.docker.distribution.manifest.v2+json"
+        },
+        "scanner": {
+          "name": "Trivy",
+          "vendor": "Aqua Security",
+          "version": "v0.16.0"
+        },
+        "severity": "High",
+        "vulnerabilities": [
+          {
+              "id": "CVE-2020-1967",
+              "package": "libcrypto1.1",
+              "version": "1.1.1c-r0",
+              "fix_version": "1.1.1g-r0",
+              "severity": "High",
+              "description": "Server or client applications that call the SSL_check_chain() function during or after a TLS 1.3 handshake may crash due to a NULL pointer dereference as a result of incorrect handling of the \"signature_algorithms_cert\" TLS extension. The crash occurs if an invalid or unrecognised signature algorithm is received from the peer. This could be exploited by a malicious peer in a Denial of Service attack. OpenSSL version 1.1.1d, 1.1.1e, and 1.1.1f are affected by this issue. This issue did not affect OpenSSL versions prior to 1.1.1d. Fixed in OpenSSL 1.1.1g (Affected 1.1.1d-1.1.1f).",
+              "links": [
+                "https://avd.aquasec.com/nvd/cve-2020-1967"
+              ],
+              "preferred_cvss": {
+                "score_v2": 5,
+                "score_v3": 7.5,
+                "vector_v2": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+                "vector_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+              },
+              "cwe_ids": [
+                "CWE-476"
+              ],
+              "vendor_attributes": {
+                "CVSS": {
+                  "nvd": {
+                    "V2Score": 5,
+                    "V2Vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+                    "V3Score": 7.5,
+                    "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+                  },
+                  "redhat": {
+                    "V3Score": 7.5,
+                    "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+                  }
+                }
+              }
+            }
+          ...
+        ]
+    }
+    ```
+ 
 6. Alternatively we could request a proprietary vulnerability report (with an example report generated
    by MicroScanner in JSON format):
    ```
@@ -227,7 +258,7 @@ Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner 
 
 - The `Accept` request header is required to indicate to Scanner Adapter an intended scan report format
 - If the client does not specify the `Accept` header it's assumed to be Harbor vulnerability report with the
-  MIME type `application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0`.
+  MIME type `application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0`. This behavior is currently maintained only for backward compatibility purposes.
 - In phase 1 each Scanner Adapter should support at least the following artifact MIME types:
   - `application/vnd.oci.image.manifest.v1+json`
   - `application/vnd.docker.distribution.manifest.v2+json`
@@ -261,10 +292,12 @@ Scanner vendors are supposed to implement Scanner Adapters exposing the Scanner 
 
 ## Scanner Adapter Implementations
 
-* [Clair](https://github.com/goharbor/harbor-scanner-clair)
 * [Aqua Trivy](https://github.com/aquasecurity/harbor-scanner-trivy)
+* [Clair](https://github.com/goharbor/harbor-scanner-clair)
 * [Anchore](https://github.com/anchore/harbor-scanner-adapter)
 * [Aqua CSP](https://github.com/aquasecurity/harbor-scanner-aqua)
 * [DoSec Scanner](https://github.com/dosec-cn/harbor-scanner/blob/master/README_en.md)
+* [Sysdig](https://github.com/sysdiglabs/harbor-scanner-sysdig-secure)
+* [TensorSecurity](https://github.com/tensorsecurity/harbor-scanner)
 
-For more details, please refer to the [Harbor compatibility list](https://github.com/goharbor/harbor/blob/master/docs/harbor_compatibility_list.md) document.
+For more details, please refer to the [Harbor compatibility list](https://goharbor.io/docs/edge/install-config/harbor-compatibility-list/) document.
