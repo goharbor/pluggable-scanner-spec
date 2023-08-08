@@ -148,7 +148,7 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
    curl -H 'Accept: application/vnd.security.vulnerability.report; version=1.1' \
      http://scanner-adapter:8080/api/v1/scan/3fa85f64-5717-4562-b3fc-2c963f66afa6/report
 
-   Retry-After: 15
+   Refresh-After: 15
    Status: 302 Found
    ```
 4. Wait 15 seconds or use your own retry interval ...
