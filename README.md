@@ -1,6 +1,6 @@
 # pluggable-scanner-spec
 
-<img src="http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.1.yaml">
+<img src="http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/goharbor/pluggable-scanner-spec/master/api/spec/scanner-adapter-openapi-v1.2.yaml">
 
 Open API spec definition for the scanners that can be plugged into Harbor to do artifact scanning.
 
@@ -29,9 +29,25 @@ not responsible for management or deployment of the adapter services.
 
 For more details, you can refer to the original [design proposal](https://github.com/goharbor/community/blob/master/proposals/pluggable-image-vulnerability-scanning_proposal.md).
 
+## Capabilities
+
+This spec currently supports a collection of capabilities, before version 1.2, scanner provides the ability to produce different reports with mime type, but these capabilities are corresponding to the vulnerability, so in 1.2 spec we emphasize and added a new filed `type` in the `ScannerCapability` to describe the different scanning capabilities, the following are the currently supported capabilities matrix.
+
+| Capability Type | Supported consumed MIME types | Supported produced MIME types |
+| --------------- | ----------------------------- | ----------------------------- |
+|  vulnerability  | `application/vnd.oci.image.manifest.v1+json`<br>`application/vnd.docker.distribution.manifest.v2+json` | `application/vnd.scanner.adaptevuln.report.harbor+json; version=1.0`<br>`application/vnd.security.vulnerability.report; version=1.1`<br>`application/vnd.scanner.adapter.vuln.report.raw`|
+|     sbom        | `application/vnd.oci.image.manifest.v1+json`<br>`application/vnd.docker.distribution.manifest.v2+json` | `application/vnd.security.sbom.repo+json; version=1.0` |
+
 ## Scanner Adapter API
 
-The [Scanner Adapter v1.1 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.1.yaml)  normalizes the vulnerability schema to a base common representation and allowing scanners to provide more elaborate and richer information about vulnerabilities:
+The [Scanner Adapter v1.2 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.2.yaml) introduces a new [data spec model](./data/spec/SBOM.md) for the SBOMs(Software Bill of Materials), and bump several headers version to v1.1 so as to support specify the capability used, refer to the OpenAPI yaml for details.
+
+- `application/vnd.scanner.adapter.metadata+json; version=1.1`
+- `application/vnd.scanner.adapter.scan.request+json; version=1.1`
+
+> Note: There is no breaking change compared to before, we extended some fields on top of the v1.1 model and bumped its version. Harbor will be compatible with both v1.1 and v1.2.
+
+The [Scanner Adapter v1.1 - OpenAPI Specification](./api/spec/scanner-adapter-openapi-v1.1.yaml) normalizes the vulnerability schema to a base common representation and allowing scanners to provide more elaborate and richer information about vulnerabilities:
  * CVSS 3.0 scores and vectors 
  * CVSS 2.0 scores and vectors
  * CWE IDs for the vulnerability
@@ -62,10 +78,10 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
 
 1. Make sure that the Scanner Adapter has expected capabilities:
    ```
-   curl -H 'Accept: application/vnd.scanner.adapter.metadata+json; version=1.0" \
+   curl -H 'Accept: application/vnd.scanner.adapter.metadata+json; version=1.1" \
      http://scanner-adapter:8080/api/v1/metadata
 
-   Content-Type: application/vnd.scanner.adapter.scanner.metadata+json; version=1.0
+   Content-Type: application/vnd.scanner.adapter.scanner.metadata+json; version=1.1
    Status: 200 OK
 
    {
@@ -76,6 +92,7 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
      },
      "capabilities": [
        {
+         "type": "vulnerability"
          "consumes_mime_types": [
            "application/vnd.oci.image.manifest.v1+json",
            "application/vnd.docker.distribution.manifest.v2+json"
@@ -96,7 +113,7 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
    1. Submit an invalid scan request:
        ```
        curl http://scanner-adapter:8080/api/v1/scan \
-       -H 'Content-Type: application/vnd.scanner.adapter.scan.request+json; version=1.0' \
+       -H 'Content-Type: application/vnd.scanner.adapter.scan.request+json; version=1.1' \
        -d @- << EOF
        {
          "registry": {
@@ -106,7 +123,13 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
          "artifact": {
            "repository": "library/mongo",
            "digest": "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e"
-         }
+         },
+         "enabled_capabilities": [
+           {
+            "type": "vulnerability"
+            "produces_mime_types": ["application/vnd.security.vulnerability.report; version=1.1"]
+           }
+         ]
        }
        EOF
 
@@ -122,7 +145,7 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
    2. Submit a valid scan request:
        ```
        curl http://scanner-adapter:8080/api/v1/scan \
-       -H 'Content-Type: application/vnd.scanner.adapter.scan.request+json; version=1.0' \
+       -H 'Content-Type: application/vnd.scanner.adapter.scan.request+json; version=1.1' \
        -d @- << EOF
        {
          "registry": {
@@ -132,7 +155,13 @@ The older [Scanner Adapter v1.0 - OpenAPI Specification](./api/spec/scanner-adap
          "artifact": {
            "repository": "library/mongo",
            "digest": "sha256:917f5b7f4bef1b35ee90f03033f33a81002511c1e0767fd44276d4bd9cd2fa8e"
-         }
+         },
+        "enabled_capabilities": [
+           {
+            "type": "vulnerability"
+            "produces_mime_types": ["application/vnd.security.vulnerability.report; version=1.1"]
+           }
+         ]
        }
        EOF
 
