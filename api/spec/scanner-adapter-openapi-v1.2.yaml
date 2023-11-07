@@ -15,22 +15,19 @@ info:
     The [/metadata](#operation/GetMetadata) operation allows a Harbor admin to configure and register a scanner
     and discover its capabilities.
 
-    ## Supported consumed MIME types
+    ## Capabilities
 
-    - `application/vnd.oci.image.manifest.v1+json`
-    - `application/vnd.docker.distribution.manifest.v2+json`
+    | Capability Type | Supported consumed MIME types | Supported produced MIME types |
+    | --------------- | ----------------------------- | ----------------------------- |
+    |  vulnerability  | `application/vnd.oci.image.manifest.v1+json`<br>`application/vnd.docker.distribution.manifest.v2+json` | `application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0`<br>`application/vnd.security.vulnerability.report; version=1.1`<br>`application/vnd.scanner.adapter.vuln.report.raw`|
+    |     sbom        | `application/vnd.oci.image.manifest.v1+json`<br>`application/vnd.docker.distribution.manifest.v2+json` | `application/vnd.security.sbom.report+json; version=1.0` |
 
-    ## Supported produced MIME types
-    
-    - `application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0`
-    - `application/vnd.security.vulnerability.report; version=1.1`
-    - `application/vnd.scanner.adapter.vuln.report.raw`
   contact:
     email: cncf-harbor-maintainers@lists.cncf.io
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  version: "1.1"
+  version: "1.2"
 servers:
   - url: /api/v1
 security:
@@ -50,6 +47,9 @@ paths:
         200:
           description: Scanner's metadata and capabilities
           content:
+            "application/vnd.scanner.adapter.metadata+json; version=1.1":
+              schema:
+                $ref: '#/components/schemas/ScannerAdapterMetadata'
             "application/vnd.scanner.adapter.metadata+json; version=1.0":
               schema:
                 $ref: '#/components/schemas/ScannerAdapterMetadata'
@@ -73,6 +73,9 @@ paths:
           Contains data required to pull the given artifact and save it for scanning in the file system or any other
           location accessible to the scanner.
         content:
+          "application/vnd.scanner.adapter.scan.request+json; version=1.1":
+            schema:
+              $ref: '#/components/schemas/ScanRequest'
           "application/vnd.scanner.adapter.scan.request+json; version=1.0":
             schema:
               $ref: '#/components/schemas/ScanRequest'
@@ -97,6 +100,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         500:
           description: Internal server error
+          content:
+            "application/vnd.scanner.adapter.error+json; version=1.0":
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        501:
+          description: The scanner has no capability to handle the scan request
           content:
             "application/vnd.scanner.adapter.error+json; version=1.0":
               schema:
@@ -142,6 +151,9 @@ paths:
                   {
                     "vendor_specific": "vulnerabilities_report"
                   }
+            "application/vnd.security.sbom.report+json; version=1.0":
+              schema:
+                $ref: '#/components/schemas/HarborSbomReport'
         302:
           description: Status indicating the scan report is being generated and the request should be retried.
           headers:
@@ -153,6 +165,12 @@ paths:
           description: Cannot find the corresponding scan request identifier
         500:
           description: Internal server error
+          content:
+            "application/vnd.scanner.adapter.error+json; version=1.0":
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        501:
+          description: The scanner has no capability to handle the mime type
           content:
             "application/vnd.scanner.adapter.error+json; version=1.0":
               schema:
@@ -188,6 +206,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ScannerCapability'
+          example: |
+            [
+             {
+                "type": "vulnerability",
+                "consumes_mime_types": [
+                  "application/vnd.oci.image.manifest.v1+json",
+                  "application/vnd.docker.distribution.manifest.v2+json"
+                ],
+                "produces_mime_types": [
+                  "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+                ]
+              },
+              {
+                "type": "sbom",
+                "consumes_mime_types": [
+                  "application/vnd.oci.image.manifest.v1+json",
+                  "application/vnd.docker.distribution.manifest.v2+json"
+                ],
+                "produces_mime_types": [
+                  "application/vnd.security.sbom.report+json; version=1.0"
+                ]
+              }
+            ]
         properties:
           $ref: "#/components/schemas/ScannerProperties"
       description: |
@@ -206,6 +247,7 @@ components:
     ScannerCapability:
       description: |
         Capability consists of the set of recognized artifact MIME types and the set of scanner report MIME types.
+
         For example, a scanner capable of analyzing Docker images and producing a vulnerabilities report recognizable
         by Harbor web console might be represented with the following capability:
         - consumes MIME types:
@@ -213,11 +255,29 @@ components:
           - `application/vnd.docker.distribution.manifest.v2+json`
         - produces MIME types:
           - `application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0`
+
+        For example, a scanner capable of analyzing artifacts and producing a sbom report recognizable
+        by Harbor might be represented with the following capability:
+        - type: sbom
+        - consumes MIME types:
+          - `application/vnd.oci.image.manifest.v1+json`
+          - `application/vnd.docker.distribution.manifest.v2+json`
+        - produces MIME types:
+          - `application/vnd.security.sbom.report+json; version=1.0`
       required:
         - consumes_mime_types
         - produces_mime_types
       type: object
       properties:
+        type:
+          type: string
+          enum:
+          - vulnerability
+          - sbom
+          description: |
+            The type of the capability, for example, 'vulnerability' represents analyzing the artifact then producing the vulnerabilities report,
+            'sbom' represents generating the corresponding sbom for the artifact which be scanned. In order to the backward and forward compatible,
+            the field is optional, we think it's a original 'vulnerability' scan if no such field.
         consumes_mime_types:
           type: array
           items:
@@ -246,6 +306,36 @@ components:
           $ref: '#/components/schemas/Registry'
         artifact:
           $ref: '#/components/schemas/Artifact'
+        enabled_capabilities:
+          type: array
+          description: Enable which capabilities supported by scanner, for backward compatibility, without this field scanner can be considered to enable all capabilities by default.
+          items:
+            type: object
+            required:
+              - type
+            properties:
+              type:
+                type: string
+                enum:
+                - vulnerability
+                - sbom
+                description: The type of the scan capability.
+                example: sbom
+              produces_mime_types:
+                type: array
+                items:
+                  type: string
+                description: |
+                  The set of MIME types of reports generated by the scanner for the consumes_mime_types of the same capability record, it is a subset or fullset of the
+                  produces_mime_types of the capability returned by the metadata API, used for client to fine grained control of the expected report type. It's a optional
+                  field, only applied when client needs to customize it, otherwise the scanner can think it's a fullset as before behavior if without this field.
+                example:
+                  - "application/vnd.security.sbom.report+json; version=1.0"
+              parameters:
+                oneOf:
+                - $ref: '#/components/schemas/SbomParameters'
+                description: The additional parameters for the scan request, for the SBOM type, harbor will carry with `accept_media_type` to specify the expected format for SBOM content.
+                example: '{"accept_media_type": "application/spdx+json"}'
     ScanResponse:
       required:
         - id
@@ -258,6 +348,11 @@ components:
         identifier is not imposed but it should be unique enough to prevent collisons when polling for scan reports.
       type: string
       example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    SbomParameters:
+      type: object
+      properties:
+        accept_media_type:
+          type: string
     Registry:
       type: object
       properties:
@@ -389,6 +484,31 @@ components:
         - Medium
         - High
         - Critical
+    HarborSbomReport:
+      type: object
+      properties:
+        generated_at:
+          type: string
+          format: 'date-time'
+          description: 'The time of the report generated.'
+        artifact:
+          $ref: '#/components/schemas/Artifact'
+        scanner:
+          $ref: '#/components/schemas/Scanner'
+        vendor_attributes:
+          type: object
+          additionalProperties: true
+          description: 'The additional attributes of the vendor.'
+        media_type:
+          type: string
+          enum:
+            - application/spdx+json
+            - application/vnd.cyclonedx+json
+          description: 'The format of the sbom data.'
+        sbom:
+          type: object
+          additionalProperties: true
+          description: 'The raw data of the sbom generated by the scanner.'
     ErrorResponse:
       type: object
       properties:
