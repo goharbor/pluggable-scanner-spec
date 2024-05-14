@@ -364,7 +364,9 @@ components:
                 example:
                   - "application/vnd.security.sbom.report+json; version=1.0"
               parameters:
-                $ref: '#/components/schemas/SbomParameters'
+                oneOf:
+                  - $ref: '#/components/schemas/SbomParameters'
+                nullable: true
                 description: The additional parameters for the scan request, for the SBOM type, harbor will carry with `sbom_media_types` to specify the expected formats for SBOM content.
                 example: | 
                   {
